@@ -1,0 +1,115 @@
+{% extends 'layout/base.html' %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="card shadow p-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">File Upload Page</h2>
+        <div>
+            <a class="btn me-2 custom-fill-button" data-bs-toggle="modal" data-bs-target="#uploadModal"> Upload File</a>
+            
+        </div>
+    </div>
+
+    <!-- Files Table -->
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>Filename</th>
+                    <th>Status</th>
+                    <th>Word Count</th>
+                    <th>Uploaded At</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for file in files %}
+                <tr>
+                    <td>{{ file.filename }}</td>
+                    <td>
+                        {% if file.status == 'completed' %}
+                            <span class="badge bg-success">Completed</span>
+                        {% elif file.status == 'processing' %}
+                            <span class="badge bg-warning text-dark">Processing</span>
+                        {% else %}
+                            <span class="badge bg-danger">Failed</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ file.word_count|default:"-" }}</td>
+                    <td>{{ file.upload_time|date:"Y-m-d H:i" }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="text-center text-muted">No files uploaded yet</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Upload Modal -->
+<div class="modal fade" id="uploadModal" tabindex="-1" aria-labelledby="uploadModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="uploadForm" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title" id="uploadModalLabel">Upload New File</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    
+                    <div class="mb-3">
+                        <label for="file" class="form-label">Choose File (.txt or .docx)</label>
+                        <input type="file" class="form-control" name="file" accept=".txt,.docx" required>
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Upload</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const uploadUrl = "{% url 'file-upload' %}"; 
+
+    document.getElementById("uploadForm").addEventListener("submit", function (e) {
+        e.preventDefault(); 
+        console.log(localStorage.getItem("access_token"));
+
+        let formData = new FormData(this);
+
+        fetch(uploadUrl, {
+            method: "POST",
+            headers: {
+                "Authorization": "Bearer " + localStorage.getItem("access_token")
+            },
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === "success") {
+                alert("✅ File uploaded successfully!");
+                document.querySelector("#uploadModal .btn-close").click(); 
+                loadFiles(); 
+            } else {
+                alert("❌ Upload failed: " + JSON.stringify(data.data));
+            }
+        })
+        .catch(err => console.error("Upload Error:", err));
+    });
+});
+
+
+</script>
+
+{% endblock %}

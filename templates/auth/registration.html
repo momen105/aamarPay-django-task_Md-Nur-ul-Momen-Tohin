@@ -1,0 +1,131 @@
+{% extends 'layout/auth_base.html' %}
+{% load static %}
+
+{% block title %}Register{% endblock %}
+
+{% block content %}
+<div class="card mx-auto shadow p-4 custom-transparent-color position-relative" style="width: 700px;">
+    <h2 class="mb-4 text-center">Join Us – Sign Up Now</h2>
+
+    <form id="registration-form" enctype="multipart/form-data">
+        <div class="row">
+          
+            <div class="mb-3">
+                <input type="text" class="form-control custom-input" name="name" placeholder="Name" required>
+            </div>
+            <div class="mb-3">
+                <input type="email" class="form-control custom-input" name="email" placeholder="Email" required>
+            </div>
+            
+            <div class="mb-3">
+                <input type="text" class="form-control custom-input" id="mobile_number" name="mobile_number" placeholder="Mobile Number (+88...)" required>
+                
+            </div>
+            
+            <div class="mb-3 position-relative">
+                <input type="password" class="form-control custom-input pe-5" id="password" name="password" placeholder="Password" required>
+                <i class="fa-solid fa-eye position-absolute top-50 end-0 translate-middle-y me-3 text-muted cursor-pointer" id="togglePassword" style="cursor: pointer;"></i>
+                
+            </div>
+                        
+            <div class="mb-3  position-relative">
+                <input type="password" class="form-control custom-input" id="confirm_password" name="confirm_password" placeholder="Confirm Password" required>
+                <i class="fa-solid fa-eye position-absolute top-50 end-0 translate-middle-y me-3 text-muted cursor-pointer" id="toggleConfirmPassword" style="cursor: pointer;"></i>
+            </div>        
+            <br>
+            <div class="error-div position-absolute">
+                <small id="mobile-error" class="text-danger d-block"></small>
+                <small id="confirm-password-error" class="text-danger d-block"></small>
+                <small id="password-error" class="text-danger d-block"></small>   
+            </div>
+            <br>
+            <div class="text-center">
+                <button type="submit" class="btn custom-outline-button w-50 ">Sign Up</button>
+            </div>
+
+    </form>
+
+    <div id="message" class="mt-3  fw-bold text-center">Already have an account? <a href="{% url 'login' %}" class="login-signin">Login here</a></div>
+</div>
+
+<script>
+document.getElementById('registration-form').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    const form = e.target;
+    const formData = new FormData(form);
+
+    try {
+        const response = await fetch('/user/registration/', {
+            method: 'POST',
+            body: formData,
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            localStorage.setItem('access_token', data.access);
+            localStorage.setItem('refresh_token', data.refresh);
+            window.location.href = '/';
+        } else {
+            let msg = '';
+            for (const key in data) {
+                msg += `${key}: ${data[key]}\n`;
+            }
+            document.getElementById('message').innerText = msg;
+        }
+    } catch (err) {
+        console.error(err);
+        document.getElementById('message').innerText = 'Something went wrong.';
+    }
+});
+
+
+</script>
+
+<script>
+   
+
+    const passwordInput = document.getElementById('password');
+    const confirmPasswordInput = document.getElementById('confirm_password');
+    const passwordError = document.getElementById('password-error');
+    const confirmPasswordError = document.getElementById('confirm-password-error');
+    const toggleIcon = document.getElementById("togglePassword");
+    const toggleConfirmPasswordIcon = document.getElementById("toggleConfirmPassword");
+    
+ 
+    confirmPasswordInput.addEventListener('input', function () {
+        const password = passwordInput.value;
+        const confirmPassword = confirmPasswordInput.value;
+
+        if (password !== confirmPassword) {
+            confirmPasswordError.textContent = 'Passwords do not match.';
+            return;
+        } else {
+            confirmPasswordError.textContent = '';
+        }
+       
+    })
+
+
+        
+    toggleIcon.addEventListener("click", function () {
+        const type = passwordInput.getAttribute("type") === "password" ? "text" : "password";
+        passwordInput.setAttribute("type", type);
+
+        // toggle icon class
+        this.classList.toggle("fa-eye");
+        this.classList.toggle("fa-eye-slash");
+    });
+
+    toggleConfirmPasswordIcon.addEventListener("click", function () {
+        const type = confirmPasswordInput.getAttribute("type") === "password" ? "text" : "password";
+        confirmPasswordInput.setAttribute("type", type);
+
+        // toggle icon class
+        this.classList.toggle("fa-eye");
+        this.classList.toggle("fa-eye-slash");
+    });
+</script>
+
+
+{% endblock %}

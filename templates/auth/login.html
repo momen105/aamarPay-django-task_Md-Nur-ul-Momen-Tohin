@@ -1,0 +1,56 @@
+{% extends 'layout/auth_base.html' %}
+
+{% block title %}Login{% endblock %}
+
+{% block content %}
+<div class="card mx-auto shadow p-4 custom-transparent-color position-relative" style="max-width: 400px;">
+    <h2 class="mb-4 text-center">Welcome Back – Please Sign In</h2>
+    <form id="loginForm"  enctype="multipart/form-data">
+        <div class="mb-3">
+            <input name="email" class="form-control custom-input" placeholder="Email" required>
+        </div>
+        <div class="mb-3">
+            <input name="password" type="password" class="form-control custom-input" placeholder="Password" required>
+        </div>
+        <button type="submit" class="btn  w-100 custom-outline-button ">Sign In</button>
+    </form>
+    <div id="login-message" class="mt-3 text-danger fw-bold text-center">Don’t have an account? <a href="{% url 'registration' %}" class="login-signin">Register now</a></div>
+</div>
+
+<script>
+document.getElementById('loginForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+
+    const formData = new FormData(e.target);
+    const email = formData.get('email');
+    const password = formData.get('password');
+
+    try {
+        const response = await fetch('/token/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email, password }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            localStorage.setItem('access_token', data.access);
+            localStorage.setItem('refresh_token', data.refresh);
+            window.location.href = '/';
+        } else {
+            let msg = '';
+            for (const key in data) {
+                msg += `${key}: ${data[key]}\n`;
+            }
+            document.getElementById('login-message').innerText = msg;
+        }
+    } catch (err) {
+        console.error(err);
+        document.getElementById('login-message').innerText = 'Something went wrong.';
+    }
+});
+</script>
+{% endblock %}

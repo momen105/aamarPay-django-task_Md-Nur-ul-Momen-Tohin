@@ -1,0 +1,83 @@
+
+{% block nav_content %}
+<div id="mySidenav" class="sidenav">
+  <div class="d-flex justify-content-between">
+    <div class="p-2 justify-content-center">
+        <a href="{% url 'dasboard' %}" class="title" id="navtitle">AamarPay</a>
+        <a class="openbtn text-center"  id="openBtn" onclick="openNav()"><i class="fa-solid fa-bars"></i></a>
+    </div>
+    <div>
+        <a class="closebtn"  id="closeBtn" onclick="closeNav()"><i class="fa-solid fa-bars"></i></a>
+    </div>
+  </div>
+  <!-- Navigation Links Section -->
+  <div class="nav-links mt-3">
+    <a href="{% url 'file-upload' %}"><i class="fa-solid fa-house me-2"></i> <span class="nav-link-name">File Upload</span></a>
+  </div>
+
+  <!-- Bottom Icon Section -->
+  <div class="bottom-icons mt-auto p-2">
+    <hr />
+    <a href="#"><i class="fa-solid fa-gear me-2"></i> <span class="nav-link-name">Settings</span></a>
+  <a href="#" onclick="logout(); return false;" class="d-flex align-items-center">
+      <i class="fa-solid fa-right-from-bracket me-2"></i>
+      <span class="nav-link-name">Logout</span>
+  </a>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+    function openNav() {
+        document.getElementById("mySidenav").style.width = "255px";
+        document.getElementById("main").style.marginLeft = "255px";
+
+        document.getElementById("openBtn").style.display = "none";
+        document.getElementById("closeBtn").style.display = "block";
+        document.getElementById("navtitle").style.fontSize = "30px";
+        document.getElementById("navtitle").style.fontWeight = "bold";
+        document.getElementById("navtitle").style.marginBottom = "0px";
+
+        // Align left and show names
+        document.querySelector(".nav-links").style.textAlign = "left";
+        document.querySelector(".bottom-icons").style.textAlign = "left";
+        const navNames = document.getElementsByClassName("nav-link-name");
+        for (let i = 0; i < navNames.length; i++) {
+            navNames[i].style.display = "inline"; // ✅ Show text
+        }
+    }
+
+    function closeNav() {
+        document.getElementById("mySidenav").style.width = "100px";
+        document.getElementById("main").style.marginLeft = "100px";
+
+        document.getElementById("openBtn").style.display = "block";
+        document.getElementById("openBtn").style.fontSize = "30px";
+        document.getElementById("closeBtn").style.display = "none";
+        document.getElementById("navtitle").style.fontSize = "16px";
+        document.getElementById("navtitle").style.fontWeight = "bold";
+
+        // Center align and hide names
+        document.querySelector(".nav-links").style.textAlign = "center";
+        document.querySelector(".bottom-icons").style.textAlign = "center";
+        const navNames = document.getElementsByClassName("nav-link-name");
+        for (let i = 0; i < navNames.length; i++) {
+            navNames[i].style.display = "none"; // ✅ Hide text
+        }
+    }
+
+    window.onload = function () {
+        openNav(); // Optional default open
+    };
+</script>
+<script>
+function logout() {
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
+    window.location.href = '/login/';
+}
+
+
+</script>
+
+{% endblock %}
