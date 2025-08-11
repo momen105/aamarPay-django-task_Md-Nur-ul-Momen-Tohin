@@ -6,10 +6,14 @@ from core.response import *
 from .models import *
 from .serializers import *
 from django.db.models import Q
+import requests
 
 class DashboardView(View):
     def get(self, request):
-        return render(request, 'dashboard/dashboard.html')
+        context={
+            "paid":False
+        }
+        return render(request, 'dashboard/dashboard.html',context=context)
     
 
 
@@ -162,3 +166,53 @@ class FileCRUDView(APIView):
 
 
 
+
+
+class PaymentView(APIView):
+    """
+    
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+    AAMARPAY_ENDPOINT = "https://sandbox.aamarpay.com/jsonpost.php"
+    STORE_ID = "aamarpaytest"
+    SIGNATURE_KEY = "dbb74894e82415a2f7ff0ec3a97e4183"
+
+
+
+    def post(self, request):
+        current_user = request.user
+        print(current_user)
+        payload = {
+            "store_id": self.STORE_ID,
+            "signature_key": self.SIGNATURE_KEY,
+            "tran_id": "TEST12345",
+            "success_url": "http://127.0.0.1:8000/api/payment/success/",
+            "fail_url": "http://127.0.0.1:8000/fail/",
+            "cancel_url": "http://127.0.0.1:8000/cancel/",
+            "amount": "100",
+            "currency": "BDT",
+            "desc": "File upload payment",
+            "cus_name": "tohin",
+            "cus_email": "test@example.com",
+            "cus_phone": "01700000000",
+            "type": "json"
+        }
+        res = requests.post(self.AAMARPAY_ENDPOINT, json=payload)
+        if res.get("result"):
+            return CustomApiResponse(
+                status='success',
+                message='Successful!',
+                data=res.json(),
+                code=status.http_200_ok
+            ).get_response()
+        else:
+            return CustomApiResponse(
+                status='error',
+                message='Failed',
+                data=res.json(),
+                code=status.HTTP_400_BAD_REQUEST
+            ).get_response()
+            
+
+  
