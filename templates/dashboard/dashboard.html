@@ -139,9 +139,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 return res.json();
             })
             .then(data => {
-                if(data.status === "success"){
-                    alert("Payment initiated successfully!");
-                    // jodi kono redirect ba response handle korte hoy, sekhane likhun
+                if(data.data.result === "true"){
+                    window.open(data.data.payment_url, "_blank", "noopener,noreferrer");
                 } else {
                     alert("Payment failed: " + JSON.stringify(data.data));
                 }

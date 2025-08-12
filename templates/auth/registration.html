@@ -55,7 +55,7 @@ document.getElementById('registration-form').addEventListener('submit', async fu
     const formData = new FormData(form);
 
     try {
-        const response = await fetch('/user/registration/', {
+        const response = await fetch('/registration/', {
             method: 'POST',
             body: formData,
         });

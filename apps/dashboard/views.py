@@ -182,11 +182,10 @@ class PaymentView(APIView):
 
     def post(self, request):
         current_user = request.user
-        print(current_user)
         payload = {
             "store_id": self.STORE_ID,
             "signature_key": self.SIGNATURE_KEY,
-            "tran_id": "TEST12345",
+            "tran_id": "TEST12340",
             "success_url": "http://127.0.0.1:8000/api/payment/success/",
             "fail_url": "http://127.0.0.1:8000/fail/",
             "cancel_url": "http://127.0.0.1:8000/cancel/",
@@ -199,12 +198,13 @@ class PaymentView(APIView):
             "type": "json"
         }
         res = requests.post(self.AAMARPAY_ENDPOINT, json=payload)
-        if res.get("result"):
+        response_data = res.json()
+        if response_data.get("result"):
             return CustomApiResponse(
                 status='success',
                 message='Successful!',
-                data=res.json(),
-                code=status.http_200_ok
+                data=response_data,
+                code=status.HTTP_200_OK
             ).get_response()
         else:
             return CustomApiResponse(
