@@ -6,12 +6,12 @@ from .models import UserModel
 @admin.register(UserModel)
 class UserAdmin(BaseUserAdmin):
     ordering = ['-id']
-    list_display = ['id', 'email', 'name', 'is_staff', 'is_superuser', 'is_active']
+    list_display = ['id', 'email', 'name','is_paid_user', 'is_staff', 'is_superuser', 'is_active']
     search_fields = ['email', 'name']
     readonly_fields = ['last_login']
     
     fieldsets = (
-        (None, {'fields': ('email', 'password')}),
+        (None, {'fields': ('email', 'password','is_paid_user')}),
         (_('Personal Info'), {'fields': ('name', 'mobile_number')}),
         (_('Permissions'), {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
         (_('Important dates'), {'fields': ('last_login',)}),

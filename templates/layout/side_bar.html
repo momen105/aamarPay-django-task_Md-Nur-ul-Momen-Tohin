@@ -15,13 +15,15 @@
     <a href="{% url 'dasboard' %}"><i class="fa-solid fa-house me-2"></i> <span class="nav-link-name">File Upload</span></a>
   </div>
   <div class="nav-links mt-3">
-    <a href="#"><i class="fa-solid fa-house me-2"></i> <span class="nav-link-name">Payment</span></a>
+    <a href="{% url 'payment-history' %}"><i class="fa-solid fa-house me-2"></i> <span class="nav-link-name">Payment</span></a>
+  </div>
+  <div class="nav-links mt-3">
+    <a href="{% url 'activity-list' %}"><i class="fa-solid fa-house me-2"></i> <span class="nav-link-name">Activity Log</span></a>
   </div>
 
   <!-- Bottom Icon Section -->
   <div class="bottom-icons mt-auto p-2">
     <hr />
-    <a href="#"><i class="fa-solid fa-gear me-2"></i> <span class="nav-link-name">Settings</span></a>
   <a href="#" onclick="logout(); return false;" class="d-flex align-items-center">
       <i class="fa-solid fa-right-from-bracket me-2"></i>
       <span class="nav-link-name">Logout</span>

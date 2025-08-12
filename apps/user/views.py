@@ -8,7 +8,7 @@ from .serializers import *
 from apps.user.models import *
 from rest_framework_simplejwt.views import TokenObtainPairView,TokenRefreshView
 from django.views import View
-from django.contrib.auth import authenticate
+from django.contrib.auth import authenticate,login
 
 class RegistrationAPIView(APIView):
     permission_classes = [AllowAny]
@@ -42,7 +42,9 @@ class CustomTokenObtainPairView(TokenObtainPairView):
             return Response({"detail": "Email and password are required."}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            user = authenticate(request, email=email, password=password)
+            user = authenticate(request, username=email, password=password)
+            if user:
+                login(request, user) 
             
         except UserModel.DoesNotExist:
             return Response({"field": 'email', "message": "User doesn't exist."}, status=status.HTTP_404_NOT_FOUND)

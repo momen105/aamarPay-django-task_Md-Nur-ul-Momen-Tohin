@@ -10,7 +10,8 @@
             <input name="email" class="form-control custom-input" placeholder="Email" required>
         </div>
         <div class="mb-3">
-            <input name="password" type="password" class="form-control custom-input" placeholder="Password" required>
+            <input id="password" name="password" type="password" class="form-control custom-input" placeholder="Password" required>
+            <i class="fa-solid fa-eye position-absolute  end-0 translate-middle-y me-4 text-muted cursor-pointer" id="togglePassword" style="cursor: pointer; top: 59%; "></i>
         </div>
         <button type="submit" class="btn  w-100 custom-outline-button ">Sign In</button>
     </form>
@@ -48,9 +49,31 @@ document.getElementById('loginForm').addEventListener('submit', async function (
             document.getElementById('login-message').innerText = msg;
         }
     } catch (err) {
-        console.error(err);
+       
         document.getElementById('login-message').innerText = 'Something went wrong.';
     }
 });
+document.addEventListener("DOMContentLoaded", function () {
+
+
+    const passwordInput = document.getElementById('password');
+    const toggleIcon = document.getElementById("togglePassword");
+
+
+
+        
+    toggleIcon.addEventListener("click", function () {
+        const type = passwordInput.getAttribute("type") === "password" ? "text" : "password";
+        passwordInput.setAttribute("type", type);
+
+        // toggle icon class
+        this.classList.toggle("fa-eye");
+        this.classList.toggle("fa-eye-slash");
+    });
+
+});
+
 </script>
+
+
 {% endblock %}

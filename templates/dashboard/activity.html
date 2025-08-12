@@ -1,0 +1,81 @@
+{% extends 'layout/base.html' %}
+
+{% block title %}Activity Logs{% endblock %}
+
+{% block content %}
+<div class="card shadow p-4">
+    <h2 class="mb-4">Activity Logs</h2>
+
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover" id="activityTable">
+            <thead class="table-light">
+                <tr>
+                    <th>Action</th>
+                    <th>Metadata</th>
+                    <th>Timestamp</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- JS দিয়ে ডাটা ঢোকানো হবে -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const token = localStorage.getItem("access_token");
+
+    const tableBody = document.querySelector("#activityTable tbody");
+    const apiUrl = "/api/activity/";
+
+    function loadActivities() {
+        fetch(apiUrl, {
+            headers: {
+                "Authorization": "Bearer " + token,
+                "Content-Type": "application/json",
+            }
+        })
+        .then(res => {
+            if (!res.ok) throw new Error("Failed to fetch activity logs");
+            return res.json();
+        })
+        .then(data => {
+            tableBody.innerHTML = "";
+            
+            const activities = data.data;
+
+            if (!activities || activities.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="3" class="text-center text-muted">No activity logs found.</td></tr>`;
+                return;
+            }
+
+            activities.forEach(log => {
+                let metadataText = "";
+                try {
+                    metadataText = typeof log.metadata === 'string' ? log.metadata : JSON.stringify(log.metadata, null, 2);
+                } catch {
+                    metadataText = "-";
+                }
+
+               
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td>${log.action || "-"}</td>
+                    <td><pre style="white-space: pre-wrap;">${metadataText}</pre></td>
+                    <td>${log.created_date} ${log.created_time}</td>
+                `;
+                tableBody.appendChild(tr);
+            });
+        })
+        .catch(err => {
+            
+            tableBody.innerHTML = `<tr><td colspan="3" class="text-center text-danger">Failed to load activity logs.</td></tr>`;
+        });
+    }
+
+    loadActivities();
+});
+</script>
+
+{% endblock %}

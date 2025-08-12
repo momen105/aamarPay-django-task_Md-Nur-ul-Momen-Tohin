@@ -1,0 +1,135 @@
+{% extends 'layout/base.html' %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="card shadow p-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">Payment History</h2>
+        
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover">
+            <thead class="table-light">
+                <th>Transaction ID</th>
+                <th>Amount</th>
+                <th>Status</th>
+                <th>Currency</th>
+                <th>Description</th>
+                <th>Customer Name</th>
+                <th>Customer Email</th>
+                <th>Customer Phone</th>
+                <th>Date</th>
+                {% if current_user.is_superuser %}
+                    <th>Actions</th>
+                {% endif %}
+            </thead>
+            <tbody id="transaction-table-body">
+                
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+   
+    const token = localStorage.getItem("access_token");
+    if (!token) {
+        window.location.href = "/login/";
+        return;
+    }
+
+    const tableBody = document.getElementById("transaction-table-body");
+    const apiUrl = "/api/transactions/";  // আপনার API url ঠিক করে দিন
+
+    // Fetch transactions and render in table
+    function loadTransactions() {
+        fetch(apiUrl, {
+            headers: {
+                "Authorization": "Bearer " + token,
+                "Content-Type": "application/json",
+            }
+        })
+        .then(res => {
+            if (!res.ok) throw new Error("Failed to fetch transactions");
+            return res.json();
+        })
+        .then(data => {
+            tableBody.innerHTML = "";
+            if (data.data.data.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="4" class="text-center">No transactions found.</td></tr>`;
+                return;
+            }
+            let deleteBtnHTML = "";
+            if (data.data.is_superuser) {
+                deleteBtnHTML = `<td> <button class="btn btn-danger btn-sm delete-btn" data-id="${tx.id}">Delete</button></td>`;
+            }
+            data.data.data.forEach(tx => {
+                const tr = document.createElement("tr");
+
+                 tr.innerHTML = `
+                    <td>${tx.transaction_id || '-'}</td>
+                    <td>${tx.amount || '-'}</td>
+                    <td>${tx.status || '-'}</td>
+                    <td>${tx.currency || '-'}</td>
+                    <td>${tx.description || '-'}</td>
+                    <td>${tx.customer_name || '-'}</td>
+                    <td>${tx.customer_email || '-'}</td>
+                    <td>${tx.customer_phone || '-'}</td>
+                    <td>${tx.created_date} ${tx.created_time}</td>
+                    
+                    ${deleteBtnHTML}
+                    
+                `;
+                tableBody.appendChild(tr);
+            });
+
+            // Add event listeners to delete buttons
+            document.querySelectorAll(".delete-btn").forEach(btn => {
+                btn.addEventListener("click", function () {
+                    const id = this.getAttribute("data-id");
+                    if (confirm("Are you sure you want to delete this transaction?")) {
+                        deleteTransaction(id);
+                    }
+                });
+            });
+        })
+        .catch(err => {
+
+            tableBody.innerHTML = `<tr><td colspan="4" class="text-center text-danger">Failed to load transactions.</td></tr>`;
+        });
+    }
+
+    // Delete API call
+    function deleteTransaction(id) {
+        fetch(apiUrl + `?transaction_id=${id}`, {
+            method: "DELETE",
+            headers: {
+                "Authorization": "Bearer " + token
+            }
+        })
+        .then(res => {
+            if (res.status === 204) {
+                alert("Transaction deleted successfully");
+                loadTransactions();  // Refresh table
+            } else {
+                return res.json().then(data => {
+                    throw new Error(data.message || "Failed to delete transaction");
+                });
+            }
+        })
+        .catch(err => {
+            alert("Error: " + err.message);
+        });
+    }
+
+    loadTransactions();
+});
+</script>
+
+
+
+{% endblock %}
