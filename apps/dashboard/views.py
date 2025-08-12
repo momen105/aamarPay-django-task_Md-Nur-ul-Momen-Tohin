@@ -7,9 +7,21 @@ from .models import *
 from .serializers import *
 from django.db.models import Q
 import requests
+import string
+import random
+from django.shortcuts import redirect
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
+import json
+from django.contrib.auth.decorators import login_required
+
+
 
 class DashboardView(View):
     def get(self, request):
+        current_user = request.user
+        print(current_user)
+        
         context={
             "paid":False
         }
@@ -167,10 +179,18 @@ class FileCRUDView(APIView):
 
 
 
+def generate_transaction_id():
+    while True:
+        random_part = ''.join(random.choices(string.digits, k=6))  # 6 digit random number
+        transaction_id = f'aamarpay{random_part}'
+        if not PaymentTransaction.objects.filter(transaction_id=transaction_id).exists():
+            return transaction_id
+
 
 class PaymentView(APIView):
     """
-    
+    POST: Send request to initiate payment
+
     """
 
     permission_classes = [permissions.IsAuthenticated]
@@ -182,24 +202,43 @@ class PaymentView(APIView):
 
     def post(self, request):
         current_user = request.user
+        data = request.data
+        tran_id = generate_transaction_id()
+        base_url = request.scheme + "://" + request.get_host()
+        
         payload = {
             "store_id": self.STORE_ID,
             "signature_key": self.SIGNATURE_KEY,
-            "tran_id": "TEST12340",
-            "success_url": "http://127.0.0.1:8000/api/payment/success/",
-            "fail_url": "http://127.0.0.1:8000/fail/",
-            "cancel_url": "http://127.0.0.1:8000/cancel/",
-            "amount": "100",
+            "tran_id": tran_id,
+            "success_url": base_url + "/api/payment/success/",
+            "fail_url": base_url + "/payment/fail/",
+            "cancel_url": base_url + "/payment/cancel/",
+            "amount": float(data.get("amount")),
             "currency": "BDT",
-            "desc": "File upload payment",
-            "cus_name": "tohin",
-            "cus_email": "test@example.com",
-            "cus_phone": "01700000000",
+            "desc": data.get("desc"),
+            "cus_name": data.get("cus_name"),
+            "cus_email": data.get("cus_email"),
+            "cus_phone": data.get("cus_phone"),
             "type": "json"
         }
+
         res = requests.post(self.AAMARPAY_ENDPOINT, json=payload)
         response_data = res.json()
         if response_data.get("result"):
+            serializer = PaymentTransactionSerializer(data={
+                    "user": current_user.id,
+                    "transaction_id": tran_id,
+                    "amount": data.get("amount"),
+                    "currency": data.get("currency"),
+                    "description": data.get("desc"),
+                    "customer_name": data.get("cus_name"),
+                    "customer_email": data.get("cus_email"),
+                    "customer_phone": data.get("cus_phone"),
+                    "gateway_response": {}
+                })
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+
             return CustomApiResponse(
                 status='success',
                 message='Successful!',
@@ -215,4 +254,40 @@ class PaymentView(APIView):
             ).get_response()
             
 
-  
+@csrf_exempt
+def payment_success(request):
+    data = request.POST 
+
+    transaction_id = data.get("mer_txnid")
+
+
+    try:
+        transaction = PaymentTransaction.objects.get(transaction_id=transaction_id)
+        transaction.gateway_response = data
+        transaction.status = "success"
+        transaction.save()
+    except PaymentTransaction.DoesNotExist:
+        return redirect('payment-fail')
+
+    return render(request, 'payment/success.html',context={})
+
+
+
+@csrf_exempt
+def payment_cancel(request):
+        data = request.POST 
+        print(data)
+        context={
+           
+        }
+        return render(request, 'payment/cancel.html',context=context)
+    
+@csrf_exempt
+def payment_fail(request):
+        data = request.POST 
+        print(data)
+        context={
+            
+        }
+        return render(request, 'payment/fail.html',context=context)
+    

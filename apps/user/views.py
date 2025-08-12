@@ -8,6 +8,7 @@ from .serializers import *
 from apps.user.models import *
 from rest_framework_simplejwt.views import TokenObtainPairView,TokenRefreshView
 from django.views import View
+from django.contrib.auth import authenticate
 
 class RegistrationAPIView(APIView):
     permission_classes = [AllowAny]
@@ -41,12 +42,14 @@ class CustomTokenObtainPairView(TokenObtainPairView):
             return Response({"detail": "Email and password are required."}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            user = UserModel.objects.get(email=email)
+            user = authenticate(request, email=email, password=password)
+            
         except UserModel.DoesNotExist:
             return Response({"field": 'email', "message": "User doesn't exist."}, status=status.HTTP_404_NOT_FOUND)
 
         if not user.check_password(password):
             return Response({"field": 'password', "message": "Password doesn't match."}, status=status.HTTP_400_BAD_REQUEST)
+        
 
         # Proceed with token generation
         serializer = self.serializer_class(context={"user": user})

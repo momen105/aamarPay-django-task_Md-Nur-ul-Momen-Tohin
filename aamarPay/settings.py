@@ -26,6 +26,7 @@ SECRET_KEY = env('SECRET_KEY')
 DEBUG = env.bool('DEBUG')
 
 
+# CSRF_TRUSTED_ORIGINS = ["*"]
 
 # Application definition
 
@@ -156,6 +157,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 AUTH_USER_MODEL = 'user.UserModel'
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+]
 
 
 REST_FRAMEWORK = {

@@ -21,9 +21,14 @@ class FileUpload(BaseModel):
 
 class PaymentTransaction(BaseModel):
     user = models.ForeignKey(UserModel, on_delete=models.CASCADE)
-    transaction_id = models.CharField(max_length=100)
+    transaction_id = models.CharField(max_length=100,unique=True)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
-    status = models.CharField(max_length=50)
+    status = models.CharField(max_length=50, null=True,blank=True, choices=[('success', 'Success'), ('failed', 'Failed'),('cancelled', 'Cancelled')])
+    currency = models.CharField(max_length=10,null=True,blank=True)
+    description = models.TextField( null=True,blank=True)
+    customer_name = models.CharField(max_length=100,null=True,blank=True)
+    customer_email = models.EmailField(null=True,blank=True)
+    customer_phone = models.CharField(max_length=20,null=True,blank=True)
     gateway_response = models.JSONField()
 
     def __str__(self):

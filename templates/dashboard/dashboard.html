@@ -8,7 +8,7 @@
         <h2 class="mb-0">File Upload Page</h2>
         <div>
             {% if not paid %}
-            <a class="btn me-2 custom-fill-button" id="payment"> Pay First</a>
+              <a class="btn me-2 custom-fill-button" data-bs-toggle="modal" data-bs-target="#paymentModal">Pay First</a>
             {% endif %}
             {% if paid %}
             <a class="btn me-2 custom-fill-button" data-bs-toggle="modal" data-bs-target="#uploadModal"> Upload File</a>
@@ -82,13 +82,94 @@
 </div>
 
 
+<!-- Payment Modal -->
+<div class="modal fade " id="paymentModal" tabindex="-1" aria-labelledby="paymentModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <form id="paymentForm">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title" id="paymentModalLabel">Payment Details</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+            <div class="row">
+                <div class="col-6">
+                    <div class="mb-3">
+                        <label for="amount" class="form-label">Amount</label>
+                        <input type="number" class="form-control" id="amount" name="amount"  required min="100" step="1">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="currency" class="form-label">Currency</label>
+                        <select class="form-select" id="currency" name="currency" required>
+                            <option value="" selected disabled>-- Select Currency --</option>
+                            <option value="BDT">BDT (Bangladeshi Taka)</option>
+                            <option value="USD">USD (US Dollar)</option>
+                            <option value="EUR">EUR (Euro)</option>
+                        </select>
+                        </div>
+
+                    <div class="mb-3">
+                        <label for="desc" class="form-label">Description</label>
+                        <input type="text" class="form-control" id="desc" name="desc" required>
+                    </div>
+
+                </div>
+                <div  class="col-6">
+                    <div class="mb-3">
+                        <label for="cus_name" class="form-label">Customer Name</label>
+                        <input type="text" class="form-control" id="cus_name" name="cus_name" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="cus_email" class="form-label">Customer Email</label>
+                        <input type="email" class="form-control" id="cus_email" name="cus_email" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="cus_phone" class="form-label">Customer Phone</label>
+                        <input type="tel" class="form-control" id="cus_phone" name="cus_phone" required>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Proceed to Pay</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
     const uploadUrl = "{% url 'file-upload' %}"; 
     const paymentUrl = "{% url 'initiate-payment' %}"; 
     const token = localStorage.getItem("access_token");
-    console.log(token)
+    const paymentForm = document.getElementById("paymentForm");
+
+    const paymentModal = document.getElementById('paymentModal');
+    if (paymentModal) {
+      paymentModal.addEventListener('show.bs.modal', () => {
+        paymentModal.querySelector('form').reset();
+      });
+    }
+
+    // Upload modal form reset on open
+    const uploadModal = document.getElementById('uploadModal');
+    if (uploadModal) {
+      uploadModal.addEventListener('show.bs.modal', () => {
+        uploadModal.querySelector('form').reset();
+      });
+    }
+
+
 
     document.getElementById("uploadForm").addEventListener("submit", function (e) {
         e.preventDefault(); 
@@ -119,8 +200,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const paymentBtn = document.getElementById("payment");
     if(paymentBtn){
         paymentBtn.addEventListener("click", function(){
-            console.log("------------")
-          
+
             if(!token){
                 alert("Please login first.");
                 return;
@@ -150,6 +230,53 @@ document.addEventListener("DOMContentLoaded", function () {
                 alert("Payment request failed.");
             });
         });
+    }
+
+
+
+    if(paymentForm){
+      paymentForm.addEventListener("submit", function(e){
+        e.preventDefault();
+
+        const token = localStorage.getItem("access_token");
+        if(!token){
+          alert("Please login first.");
+          return;
+        }
+
+        const formData = new FormData(paymentForm);
+        const payload = {};
+        formData.forEach((value, key) => {
+          payload[key] = value;
+        });
+
+        fetch("{% url 'initiate-payment' %}", {
+          method: "POST",
+          headers: {
+            "Authorization": "Bearer " + token,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload)
+        })
+        .then(res => {
+          if(!res.ok) throw new Error("Payment initiation failed");
+          return res.json();
+        })
+        .then(data => {
+          if(data.data.result === "true"){
+            window.open(data.data.payment_url, "_blank", "noopener,noreferrer");
+            // Close modal after successful initiation
+            const modal = bootstrap.Modal.getInstance(document.getElementById('paymentModal'));
+            modal.hide();
+          } else {
+            alert("Payment failed: " + JSON.stringify(data.data));
+          }
+        })
+        .catch(err => {
+          console.error("Payment Error:", err);
+          alert("Payment request failed.");
+        });
+      });
     }
 
 });

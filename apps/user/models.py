@@ -10,7 +10,8 @@ class UserModel(AbstractBaseUser,BaseModel,PermissionsMixin):
     email = models.EmailField(unique=True)
     mobile_number = models.CharField(max_length=14)
     is_staff = models.BooleanField(default=False)
-
+    is_paid_user = models.BooleanField(default=False)
+    
     objects = UserManager()
 
     USERNAME_FIELD = 'email'
